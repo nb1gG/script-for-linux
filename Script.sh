@@ -82,6 +82,13 @@ sed -i 's/PASS_MIN_DAYS	0/PASS_MIN_DAYS	20/' /etc/login.defs
 sed -i 's/password	requisite			pam_pwquality.so retry=3/password	requisite			pam_pwquality.so retry=3 remember=5 minlen=8/' /etc/pam.d/common-password
 sed -i 's/password	[success=2 default=ignore]	pam_unix.so obscure use_authtok try_first_pass yescrypt/password	[success=2 default=ignore]	pam_unix.so obscure use_authtok try_first_pass yescrypt ucredit=-1 lcredit=-1 dcredit=-1 ocredit=-1/' /etc/pam.d/common-password
 clear
+sudo apt-get install ufw
+ufw default deny incoming
+ufw default allow outgoing
+ufw logging on
+ufw logging high
+ufw enable
+echo "nospoof on" >> /etc/host.conf
 sudo apt install auditd
 echo y
 sudo auditctl -e 1
