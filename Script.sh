@@ -1,9 +1,9 @@
 #! /bin/bash
 clear
 echo "Starting Script"
-#mkdir ~/Desktop/backup
-#cp /etc/passwd ~/Desktop/backup/
-#cp /etc/group ~/Desktop/backup/
+mkdir ~/Desktop/backup
+cp /etc/passwd ~/Desktop/backup/
+cp /etc/group ~/Desktop/backup/
 cat /etc/passwd
 echo "Type all users with spaces in between"
 read -a users
@@ -73,14 +73,23 @@ do
 	echo "passowrd policy set"
 done
 clear
-echo "Disabling Guest Account"
-echo allow-guest=false >> /etc/lightdm/lightdm.conf
-sleep .5
-sed -i 's/password	required			pam_permit.so/password	required			pam_permit.so deny=5 onerr=fail unlock_time=1800/' /etc/pam.d/common-auth
-sed -i 's/PASS_MAX_DAYS	99999/PASS_MAX_DAYS	90/' /etc/login.defs
-sed -i 's/PASS_MIN_DAYS	0/PASS_MIN_DAYS	20/' /etc/login.defs
-sed -i 's/password	requisite			pam_pwquality.so retry=3/password	requisite			pam_pwquality.so retry=3 remember=5 minlen=8/' /etc/pam.d/common-password
-sed -i 's/password	[success=2 default=ignore]	pam_unix.so obscure use_authtok try_first_pass yescrypt/password	[success=2 default=ignore]	pam_unix.so obscure use_authtok try_first_pass yescrypt ucredit=-1 lcredit=-1 dcredit=-1 ocredit=-1/' /etc/pam.d/common-password
+
+sudo apt-get install libpam-cracklib -y
+grep "auth optional pam_tally.so deny=5 unlock_time=900 onerr=fail audit even_deny_root_account silent " /etc/pam.d/common-auth
+if [ "$?" -eq "1" ]
+then	
+	echo "auth optional pam_tally.so deny=5 unlock_time=900 onerr=fail audit even_deny_root_account silent " >> /etc/pam.d/common-auth
+	echo -e "password requisite pam_cracklib.so retry=3 minlen=8 difok=3 reject_username minclass=3 maxrepeat=2 dcredit=1 ucredit=1 lcredit=1 ocredit=1\npassword requisite pam_pwhistory.so use_authtok remember=24 enforce_for_root" >>  /etc/pam.d/common-password
+fi
+clear
+sed -i '160s/.*/PASS_MAX_DAYS\o01130/' /etc/login.defs
+sed -i '161s/.*/PASS_MIN_DAYS\o0113/' /etc/login.defs
+sed -i '162s/.*/PASS_MIN_LEN\o0118/' /etc/login.defs
+sed -i '163s/.*/PASS_WARN_AGE\o0117/' /etc/login.defs
+
+sed -i 's/EXPIRE=/EXPIRE=30/' /etc/default/useradd
+sed -i 's/INACTIVE=/INACTIVE=30' /etc/default/useradd
+
 clear
 sudo apt-get install ufw
 ufw default deny incoming
@@ -88,11 +97,42 @@ ufw default allow outgoing
 ufw logging on
 ufw logging high
 ufw enable
+ufw deny 1337
+
 echo "nospoof on" >> /etc/host.conf
-sudo apt install auditd
-echo y
-sudo auditctl -e 1
+unalias -a
+usermod -L root
+chmod 640 .bash_history
+chmod 604 /etc/shadow
 clear
+cp /etc/rc.local ~/Desktop/
+echo > /etc/rc.local
+echo 'exit 0' >> /etc/rc.local
+
+clear
+: <<'END'
+echo Does this machine need Samba?
+read sambaYN
+echo Does this machine need FTP?
+read ftpYN
+echo Does this machine need SSH?
+read sshYN
+echo Does this machine need Telnet?
+read telnetYN
+echo Does this machine need Mail?
+read mailYN
+echo Does this machine need Printing?
+read printYN
+echo Does this machine need MySQL?
+read dbYN
+echo Will this machine be a Web Server?
+read httpYN
+echo Does this machine need DNS?
+read dnsYN
+echo Does this machine allow media files?
+read mediaFilesYN
+END
+
 
 
 
