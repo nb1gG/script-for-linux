@@ -109,6 +109,11 @@ cp /etc/rc.local ~/Desktop/
 echo > /etc/rc.local
 echo 'exit 0' >> /etc/rc.local
 
+touch /usr/share/pam-configs/faillock
+echo -e "Name: Enforce failed login attempt counter\nDefault: no\nPriority: 0\nAuth-Type: Primary\nAuth:\n	[default=die] pam_faillock.so authfail\n	sufficient pam_faillock.so authsucc"
+touch /usr/share/pam-configs/faillock_notify
+echo -e "Name: Notify on failed login attemps\nDefault: no\nPriority: 1024\nAuth-Type: Primary\nAuth:\n	requisite pam_faillock.so preauth
+pam-auth-update
 clear
 : <<'END'
 echo Does this machine need Samba?
